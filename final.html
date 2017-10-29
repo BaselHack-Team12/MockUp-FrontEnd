@@ -1,0 +1,152 @@
+<!DOCTYPE HTML>
+<html>
+  <head>
+    <title>Basel Traffic Data Visualization</title>
+    <script src="jquery-1.11.0.min.js"></script>
+	<script type="text/javascript" src="https://www.gstatic.com/charts/loader.js"></script>
+	<link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/4.0.0-beta.2/css/bootstrap.min.css" integrity="sha384-PsH8R72JQ3SOdhVi3uxftmaW6Vc51MKb0q5P2rRUpPvrszuE4W1povHYgTpBfshb" crossorigin="anonymous">
+	<meta charset="utf-8"/>
+	<style>
+		body {
+			overflow: hidden;
+		}
+		.container {
+			width: 85vw;
+			height: 60vh;
+		}
+	</style>
+	<script>
+	function init() {
+		var streetsDanger1 = [];
+		var streetsDanger2 = [];
+		var streetsDanger3 = [];
+		$.getJSON('streetData.json',function (data) {   
+			for (var i = 0; i < data.length; i++) {
+				if (data[i].dangerLevel >= 0 && data[i].dangerLevel <= 33.3 && data[i].dangerLevel != null) {
+					streetsDanger1.push( [data[i].streetName, data[i].latitude, data[i].longitude] );
+				}
+				else if (data[i].dangerLevel >= 33.3 && data[i].dangerLevel <= 66.6 && data[i].dangerLevel != null) {
+					streetsDanger2.push( [data[i].streetName, data[i].latitude, data[i].longitude] );
+				}
+				else if (data[i].dangerLevel >= 66.6 && data[i].dangerLevel <= 99.9 && data[i].dangerLevel != null) {
+					streetsDanger3.push( [data[i].streetName, data[i].latitude, data[i].longitude] );
+				}
+			}
+			streetsDanger1 = streetsDanger1.slice(0, 15);
+			streetsDanger2 = streetsDanger2.slice(0, 15);
+			streetsDanger3 = streetsDanger3.slice(0, 15);
+			
+			streetsDanger1 = [{0: "Gasstrasse", 1:"47.570401", 2:"7.5738286"},{0:"Theaterstrasse",1:"47.55318",2:"7.58985"},{0:"Riehenring",1:"47.5668569",2:"7.5976822"},{0:"Hammerstrasse",1:"47.56025",2:"7.59794"}];
+			streetsDanger2 = [{0: "Holeestrasse", 1:"47.54698", 2:"7.57117"},{0:"Bettingerstrasse",1:"47.5785031",2:"7.6506725"},{0:"Blauenstrasse",1:"47.55481",2:"7.5732"}];
+			streetsDanger3 = [{0: "Mülhauserstrasse", 1:"47.570401", 2:"7.5738286"},{0: "Wasserstrasse", 1:"47.570401", 2:"7.5738286"},{0: "Weilstrasse", 1:"47.592155", 2:"7.6425212"},{0:"Tangentenweg",1:"47.57121",2:"7.59876"}];
+			
+			drawMap(streetsDanger1, streetsDanger2, streetsDanger3);
+		});
+	}
+	</script>
+    <script>
+		function drawMap(streetsDanger1, streetsDanger2, streetsDanger3) {
+			var url = "https://overpass-turbo.eu/map.html?Q=%0A[out%3Ajson][timeout%3A25]%3B(";
+			for (i = 0; i < streetsDanger1.length; i++) { 
+				console.log(streetsDanger1[i][0]);
+				url += "way[%22name%22~%22" + streetsDanger1[i][0] + "%22](around%3A1000%2C" + streetsDanger1[i][1] + "%2C" + streetsDanger1[i][2] + ")%3B";
+			}
+			for (i = 0; i < streetsDanger2.length; i++) { 
+				url += "way[%22name%22~%22" + streetsDanger2[i][0] + "%22](around%3A1000%2C" + streetsDanger2[i][1] + "%2C" + streetsDanger2[i][2] + ")%3B";
+			}
+			for (i = 0; i < streetsDanger3.length; i++) { 
+				url += "way[%22name%22~%22" + streetsDanger3[i][0] + "%22](around%3A1000%2C" + streetsDanger3[i][1] + "%2C" + streetsDanger3[i][2] + ")%3B";
+			}
+			url += ")%3Bout%20body%3B%3E%3Bout%20skel%20qt%3B{{style%3A%20";
+			for (i = 0; i < streetsDanger1.length; i++) {
+				if (i === streetsDanger1.length - 1) {
+					url += "way[name%3D" + streetsDanger1[i][0] + "]" ;
+				} else {
+					url += "way[name%3D" + streetsDanger1[i][0] + "]%2C" ;
+				}
+			}
+			url += "{color%3Agreen%3Bwidth%3A4%3Bopacity%3A0.75%3B}%20";
+			for (i = 0; i < streetsDanger2.length; i++) {
+				if (i === streetsDanger2.length - 1) {
+					url += "way[name%3D" + streetsDanger2[i][0] + "]" ;
+				} else {
+					url += "way[name%3D" + streetsDanger2[i][0] + "]%2C" ;
+				}
+			}
+			url += "{color%3Aorange%3Bwidth%3A4%3Bopacity%3A1%3B}%20";
+			for (i = 0; i < streetsDanger3.length; i++) {
+				if (i === streetsDanger3.length - 1) {
+					url += "way[name%3D" + streetsDanger3[i][0] + "]" ;
+				} else {
+					url += "way[name%3D" + streetsDanger3[i][0] + "]%2C" ;
+				}
+			}
+			url += "{color%3Ared%3Bwidth%3A4%3Bopacity%3A0.50%3B}%20";
+			url += "}}";
+			console.log(url);
+			$('#map').attr('src', url);
+		}
+    </script>
+	<script type="text/javascript">
+      google.charts.load('current', {'packages':['corechart']});
+      google.charts.setOnLoadCallback(drawChart);
+      function drawChart() {
+        var data = new google.visualization.DataTable();
+        data.addColumn('string', 'Topping');
+        data.addColumn('number', 'Slices');
+        data.addRows([
+          ['Gasstrasse', 3278],
+          ['Mülhauserstrasse', 17327],
+          ['Birstrasse', 1172],
+          ['Holeestrasse', 11334],
+          ['Theaterstrasse', 2312]
+        ]);
+        var options = {'width':500, 'height':400};
+        var chart = new google.visualization.PieChart(document.getElementById('pieChart'));
+        chart.draw(data, options);
+      }
+    </script>
+	<script type="text/javascript">
+		google.charts.load('current', {packages: ['corechart', 'bar']});
+		google.charts.setOnLoadCallback(drawMultSeries);
+		function drawMultSeries() {
+		  var data = google.visualization.arrayToDataTable([
+			['Street Name', 'Total Cars', 'Speeding Cars'],
+			['Gasstrasse', 8278, 3278],
+			['Mülhauserstrasse', 57327, 17327],
+			['Birstrasse', 5172, 1172],
+			['Holeestrasse', 20034, 11334],
+			['Theaterstrasse', 12312, 2312]
+		  ]);
+		  var options = {
+			chartArea: {width: '60%', height: '100%'},
+			hAxis: {
+			  title: 'Total Cars & Speeding Cars',
+			  minValue: 0
+			}
+		  };
+		  var chart = new google.visualization.BarChart(document.getElementById('barChart'));
+		  chart.draw(data, options);
+		}
+    </script>
+  </head>
+  <body onload="init();">
+	<div class="container">
+	  <div class="row">
+		<div class="col display-4" style="text-align: center;">
+			Basel Traffic Visualization
+		</div>
+	  </div>
+	  <iframe width="99%" height="99%" id="map"></iframe>
+	  <div style="width: 100%; position: relative; z-index: 1; top: 3%;"><p class="h3" style="text-align: center; margin: 0;">Most Dangerous Streets in Basel</p></div>
+	  <div class="row" style="top: -7%; position: relative;">
+		<div class="col-4">
+		  <div id="pieChart" style="position: relative; z-index: 0;"></div>
+		</div>
+		<div class="col-8" style="right: -3%;">
+		  <div id="barChart" style="margin-top: 10%;"></div>
+		</div>
+	  </div>
+	</div>
+  </body>
+</html>
